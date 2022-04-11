@@ -6,13 +6,11 @@ import {
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
     signOut,
+    onAuthStateChanged
 } from "firebase/auth";
-
-import {
-    getFirestore,
-    collection,
-    addDoc,
-} from "firebase/firestore";
+import {useLocation, Navigate, useNavigate} from "react-router-dom";
+import {createContext, useContext, useEffect, useState} from "react";
+import {useRecoilValue} from "recoil";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDqR8feB5849W4DcKgjLCHvDoF1NcJa8S8",
@@ -27,39 +25,31 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
-export const loginWithEmailPassword = async (email, password) => new Promise(async resolve => {
-        {
-            try {
-                if (auth.currentUser)
-                    resolve(auth.currentUser)
-                else
-                    await signInWithEmailAndPassword(auth, email, password).then((userCredential) => {
-                        resolve(userCredential.user);
-                    })
-            } catch (err) {
-                console.log(err);
-                alert(err.message);
-            }
-        }
+const loginWithEmailPassword = async (email, password) => {
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+        throw err
     }
-)
-
-export const isAuthenticated = () => {
-    console.log(auth.currentUser)
-    return auth.currentUser !== undefined
 };
 
-const registerWithEmailAndPassword = async (name, email, password) => {
+const registerWithEmailAndPassword = async (email, password) => {
     try {
         const res = await createUserWithEmailAndPassword(auth, email, password);
         const user = res.user;
         console.log(user)
     } catch (err) {
-        console.error(err);
-        alert(err.message);
+        throw err
     }
 };
 
 const logout = () => {
     signOut(auth);
+};
+
+export {
+    auth,
+    loginWithEmailPassword,
+    registerWithEmailAndPassword,
+    logout,
 };
