@@ -6,11 +6,6 @@ import {useRecoilValue} from "recoil";
 import {userState} from "../states";
 import {HiSwitchHorizontal} from "react-icons/hi";
 import {useNavigate} from "react-router-dom";
-import {
-    Dropdown,
-    DropdownItem,
-    DropdownMenu,
-} from 'styled-dropdown-component';
 import CreateParcel from "./createParcel";
 
 const Title = styled.h1`

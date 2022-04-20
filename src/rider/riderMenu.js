@@ -1,12 +1,20 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import styled from "styled-components";
-import {MdLogout} from "react-icons/md";
-import {logout} from "../firebase";
-import {useRecoilValue} from "recoil";
+import {auth, logout} from "../firebase";
+import {useRecoilState, useRecoilValue} from "recoil";
 import {riderState, userState} from "../states";
 import {HiLogout, HiSwitchHorizontal} from "react-icons/hi";
 import {useNavigate} from "react-router-dom";
+import Map, {Marker} from 'react-map-gl';
+import axios from "axios";
+import {useAuthState} from "react-firebase-hooks/auth";
+import {useGeolocation} from "react-use";
 
+const Content = styled.div`
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+`
 
 const Title = styled.h1`
   margin: 20px auto 10px 20px;
@@ -32,13 +40,16 @@ const IconButton = styled.button`
   font-size: 2rem;
   border: none;
   background: none;
-  svg{
+
+  svg {
     text-align: center;
     display: table-cell;
     vertical-align: middle;
   }
+
   transition: 200ms;
-  :hover{
+
+  :hover {
     opacity: .5;
   }
 `
@@ -53,6 +64,7 @@ const MenuButton = styled.button`
   color: white;
   border: none;
   transition: 100ms;
+
   &:hover {
     opacity: .9;
   }
@@ -79,28 +91,120 @@ const MenuText = styled.p`
   margin-right: 50px;
 `
 
-const RiderMenu = ({ className, children }) => {
+const Rider = styled.div`
+  width: 25vw;
+  background: white;
+  display: flex;
+  flex-direction: column;
+`
+
+const OverviewMap = styled(Map)`
+  width: 75vw;
+  height: 100vh;
+`
+
+const RiderMenu = ({className, children}) => {
     const user = useRecoilValue(userState);
-    const rider = useRecoilValue(riderState);
+    const [rider, setRider] = useRecoilState(riderState);
+    const [authUser] = useAuthState(auth);
+    const [availableDeliveries, setAvailableDeliveries] = useState([])
     const navigate = useNavigate()
+    const location = useGeolocation();
+
+    useEffect(() => {
+
+        authUser.getIdToken(false).then(token => {
+            axios.get(`http://localhost/api/deliveries/radius/${rider.Location.Latitude},${rider.Location.Longitude}?radius=3000`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(response => {
+                    console.log(response.data)
+                    setAvailableDeliveries(response.data)
+                }
+            ).catch(error => {
+                console.log(error)
+            })
+        })
+    }, [rider]);
+
+    const becomeActive = () => {
+        if(!navigator.geolocation) {
+            console.log('Geolocation is not supported by your browser');
+        } else {
+            console.log('Locating…');
+            navigator.geolocation.getCurrentPosition(success, error, {maximumAge: 10000});
+        }
+    }
+
+    const success = (position) => {
+        const latitude  = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        console.log(latitude)
+    }
+
+    const error = () => {
+        console.log('Unable to retrieve your location');
+    }
+
+    const updateRiderPosition = (lat,lng) => {
+        authUser.getIdToken(false).then(token => {
+            axios.put(`http://localhost/api/riders/${rider.UserID}/location`, {latitude: lat, longitude: lng}, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(response => {
+                    console.log(response.data)
+                    setRider(response.data)
+                }
+            ).catch(error => {
+                console.log(error)
+            })
+        })
+    }
 
     return (
-        <div className={className}>
-            <Horizontal>
-                <Title>{user.Name && user.Name + "'s"} delivery center</Title>
-                <IconButton size='50px' onClick={() => navigate("/select-type")}>
-                    <HiSwitchHorizontal/>
-                </IconButton>
-                <IconButton size='50px' onClick={() => logout()}>
-                    <HiLogout/>
-                </IconButton>
-            </Horizontal>
-            <SeparatorLine/>
-            <InactiveBox>
-                <MenuText>You are currently inactive. Press the button below to become active again and see possible deliveries.</MenuText>
-                <MenuButton>Start</MenuButton>
-            </InactiveBox>
-        </div>
+        <Content>
+            <Rider>
+                <Horizontal>
+                    <Title>{user.Name && user.Name + "'s"} delivery center</Title>
+                    <IconButton size='50px' onClick={() => navigate("/select-type")}>
+                        <HiSwitchHorizontal/>
+                    </IconButton>
+                    <IconButton size='50px' onClick={() => logout()}>
+                        <HiLogout/>
+                    </IconButton>
+                </Horizontal>
+                <SeparatorLine/>
+                <InactiveBox>
+                    <MenuText>You are currently inactive. Press the button below to become active again and see possible
+                        deliveries.</MenuText>
+                    <MenuButton onClick={becomeActive}>Start</MenuButton>
+                </InactiveBox>
+            </Rider>
+            <OverviewMap
+                initialViewState={{
+                    longitude: rider.Location.Longitude,
+                    latitude: rider.Location.Latitude,
+                    zoom: 12.8
+                }}
+                mapStyle="mapbox://styles/rensb/cl1kft7vy000f15mca3yz8f0l"
+                mapboxAccessToken='pk.eyJ1IjoicmVuc2IiLCJhIjoiY2s2a2xpNmg0MDU2dzNscnI5cjRnaG1uciJ9.GKmyEyKDRJCTuLe2elJ0Pw'
+            >
+                <Marker draggable onDragEnd={(e) => updateRiderPosition(e.lngLat.lat, e.lngLat.lng)} longitude={rider.Location.Longitude} latitude={rider.Location.Latitude}>
+                    <svg width="40" height="40">
+                        <image href="rider_marker.svg" src="rider_marker.png" width="40" height="40"/>
+                    </svg>
+                </Marker>
+                {availableDeliveries.map(x =>
+                    <Marker longitude={x.PickupPoint.Longitude} latitude={x.PickupPoint.Latitude}>
+                        <svg width="40" height="40">
+                            <image href="box_marker.svg" src="rider_marker.png" width="40" height="40"/>
+                        </svg>
+                    </Marker>)}
+            </OverviewMap>
+        </Content>
     );
 };
 

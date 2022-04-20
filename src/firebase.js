@@ -1,16 +1,11 @@
 import {initializeApp} from 'firebase/app'
 
 import {
-    GoogleAuthProvider,
     getAuth,
     signInWithEmailAndPassword,
     createUserWithEmailAndPassword,
-    signOut,
-    onAuthStateChanged
+    signOut
 } from "firebase/auth";
-import {useLocation, Navigate, useNavigate} from "react-router-dom";
-import {createContext, useContext, useEffect, useState} from "react";
-import {useRecoilValue} from "recoil";
 
 const firebaseConfig = {
     apiKey: "AIzaSyDqR8feB5849W4DcKgjLCHvDoF1NcJa8S8",

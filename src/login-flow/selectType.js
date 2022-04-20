@@ -13,7 +13,7 @@ import {
 import axios from "axios";
 import {MdDirectionsBike} from "react-icons/md";
 import {BsBoxSeam} from "react-icons/bs"
-import {useRecoilState, useSetRecoilState} from "recoil";
+import {useSetRecoilState} from "recoil";
 import {customerState, riderState} from "../states";
 
 const Horizontal = styled.div`

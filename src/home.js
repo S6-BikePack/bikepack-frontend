@@ -20,14 +20,6 @@ const Customer = styled(CustomerMenu)`
   flex-direction: column;
 `
 
-const Rider = styled(RiderMenu)`
-  margin: 10px;
-  width: 25vw;
-  background: white;
-  display: flex;
-  flex-direction: column;
-`
-
 const OverviewMap = styled(Map)`
   margin: 10px 10px 10px 0px;
   width: 75vw;
@@ -67,6 +59,10 @@ const Home = (props) => {
             return navigate("/select-type");
         }
 
+        authUser.getIdToken(false).then(token => {
+            console.log(token)
+        })
+
         setLoading(false)
 
     }, [user, authUser, authLoading]);
@@ -105,8 +101,7 @@ const Home = (props) => {
         else if (rider) {
             return (
                 <>
-                    <Rider/>
-                    <OverviewMap/>
+                    <RiderMenu/>
                 </>
             )
         }
