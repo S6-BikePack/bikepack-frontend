@@ -12,14 +12,6 @@ import {useRecoilState} from "recoil";
 import {customerState, riderState, userState} from "./states";
 import RiderMenu from "./rider/riderMenu";
 
-const Customer = styled(CustomerMenu)`
-  margin: 10px;
-  width: 25vw;
-  background: white;
-  display: flex;
-  flex-direction: column;
-`
-
 const OverviewMap = styled(Map)`
   margin: 10px 10px 10px 0px;
   width: 75vw;
@@ -93,8 +85,7 @@ const Home = (props) => {
         if (customer) {
             return (
                 <>
-                    <Customer/>
-                    <OverviewMap/>
+                    <CustomerMenu/>
                 </>
             )
         }

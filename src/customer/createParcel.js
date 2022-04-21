@@ -146,6 +146,7 @@ const CreateParcel = (props) => {
             <MenuTextField type="number" placeholder="Weight (g)" value={weight} onChange={(e) => setWeight(e.target.value)}/>
             <SeparatorLine/>
             <MenuButton onClick={RegisterParcel}>Register parcel</MenuButton>
+            <MenuButton onClick={RegisterParcel}>Register and deliver</MenuButton>
             <MenuButton color="#878787" onClick={props.onBack}>Back</MenuButton>
         </Box>
     );
