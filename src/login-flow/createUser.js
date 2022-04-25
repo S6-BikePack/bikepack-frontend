@@ -1,7 +1,5 @@
-import React, {useEffect, useState} from 'react'
-import styled from 'styled-components'
-import validator from 'validator'
-import {auth, loginWithEmailPassword} from "../firebase";
+import React, {useState} from 'react'
+import {auth} from "../firebase";
 import {useNavigate} from 'react-router-dom'
 import {useAuthState} from "react-firebase-hooks/auth";
 import {
@@ -15,7 +13,6 @@ import {
   Page
 } from "../Style";
 import axios from "axios";
-import * as PropTypes from "prop-types";
 import {useSetRecoilState} from "recoil";
 import {userState} from "../states";
 

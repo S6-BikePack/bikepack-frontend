@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react'
-import styled from 'styled-components'
 import validator from 'validator'
 import {auth, loginWithEmailPassword} from "../firebase";
 import {useNavigate} from 'react-router-dom'

@@ -1,24 +1,13 @@
-### STAGE 1: Build ###
-FROM node:16-alpine as build
-ARG REACT_APP_ENVIRONMENT
-ENV REACT_APP_ENVIRONMENT $REACT_APP_ENVIRONMENT
-
+FROM node:17-alpine as build
 WORKDIR /app
+COPY package.json .
+COPY yarn.lock .
+RUN yarn install
+COPY ./ .
+RUN yarn build
 
-#copy any files that start with "package" and have a ".json" extension
-COPY  package*.json ./
-
-#install the node dependencies
-RUN npm install
-
-#copy the rest of the files from the frontend to the app folder
-COPY . .
-
-#build the frontend
-RUN npm run build
-
-#add a second step based on nginx
-FROM nginx:alpine
-
-#copy the build output from the build step to the hosting folder of nginx
+FROM nginx:stable-alpine
 COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

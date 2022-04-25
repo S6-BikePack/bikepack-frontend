@@ -1,23 +1,18 @@
-import React, {useEffect, useState} from 'react'
-import styled from 'styled-components'
-import validator from 'validator'
-import {auth, loginWithEmailPassword} from "../firebase";
+import React, {useState} from 'react'
+import {auth} from "../firebase";
 import {useNavigate} from 'react-router-dom'
 import {useAuthState} from "react-firebase-hooks/auth";
 import {
     LoginBox,
     LoginBoxButton,
     LoginBoxDescription,
-    LoginBoxError,
     LoginBoxIcon,
-    LoginBoxTextField,
     LoginBoxTitle,
     Page
 } from "../Style";
 import axios from "axios";
-import * as PropTypes from "prop-types";
 import {useSetRecoilState} from "recoil";
-import {customerState, userState} from "../states";
+import {customerState} from "../states";
 import Dropdown from "../dropdown";
 
 const CreateCustomer = () => {

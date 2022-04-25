@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react'
 import styled from 'styled-components'
 import validator from 'validator'
-import {auth, loginWithEmailPassword, registerWithEmailAndPassword} from "../firebase";
+import {auth, registerWithEmailAndPassword} from "../firebase";
 import {useNavigate} from 'react-router-dom'
 import {useAuthState} from "react-firebase-hooks/auth";
 import {

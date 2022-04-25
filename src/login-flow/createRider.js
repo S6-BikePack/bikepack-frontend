@@ -1,7 +1,5 @@
-import React, {useEffect, useState} from 'react'
-import styled from 'styled-components'
-import validator from 'validator'
-import {auth, loginWithEmailPassword} from "../firebase";
+import React, {useState} from 'react'
+import {auth} from "../firebase";
 import {useNavigate} from 'react-router-dom'
 import {useAuthState} from "react-firebase-hooks/auth";
 import {
@@ -15,9 +13,8 @@ import {
     Page
 } from "../Style";
 import axios from "axios";
-import * as PropTypes from "prop-types";
 import {useSetRecoilState} from "recoil";
-import {customerState, riderState, userState} from "../states";
+import {customerState, riderState} from "../states";
 import Dropdown from "../dropdown";
 
 const CreateRider = () => {
@@ -31,7 +28,8 @@ const CreateRider = () => {
     const [capacityError, setCapacityError] = useState('')
 
     const [authUser,] = useAuthState(auth);
-    const setCustomer = useSetRecoilState(riderState)
+    const setCustomer = useSetRecoilState(customerState)
+    const setRider = useSetRecoilState(riderState)
 
     const [step, setStep] = useState(0)
 
@@ -62,7 +60,8 @@ const CreateRider = () => {
                 }
             })
                 .then(response => {
-                        setCustomer(response.data)
+                        setCustomer(null)
+                        setRider(response.data)
                         navigate("/")
                     }
                 )
