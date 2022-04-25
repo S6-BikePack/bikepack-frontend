@@ -14,7 +14,7 @@ import {
 } from "../Style";
 import axios from "axios";
 import {useSetRecoilState} from "recoil";
-import {riderState} from "../states";
+import {customerState, riderState} from "../states";
 import Dropdown from "../dropdown";
 
 const CreateRider = () => {
@@ -28,7 +28,8 @@ const CreateRider = () => {
     const [capacityError, setCapacityError] = useState('')
 
     const [authUser,] = useAuthState(auth);
-    const setCustomer = useSetRecoilState(riderState)
+    const setCustomer = useSetRecoilState(customerState)
+    const setRider = useSetRecoilState(riderState)
 
     const [step, setStep] = useState(0)
 
@@ -59,7 +60,8 @@ const CreateRider = () => {
                 }
             })
                 .then(response => {
-                        setCustomer(response.data)
+                        setCustomer(null)
+                        setRider(response.data)
                         navigate("/")
                     }
                 )

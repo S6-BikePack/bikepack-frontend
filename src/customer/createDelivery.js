@@ -207,15 +207,21 @@ const CreateDelivery = (props) => {
                 {
                     parcelId: props.parcel.ID,
                     ownerId: props.parcel.OwnerId,
-                    pickupPoint: {
-                        latitude: pickupPoint.center[1],
-                        longitude: pickupPoint.center[0]
+                    pickup: {
+                        coordinates: {
+                            latitude: pickupPoint.center[1],
+                            longitude: pickupPoint.center[0]
+                        },
+                        address: pickupPoint.place_name,
+                        time: (pickupTime.getTime() / 1000)
                     },
-                    deliveryPoint: {
-                        latitude: deliveryPoint.center[1],
-                        longitude: deliveryPoint.center[0]
-                    },
-                    pickupTime: (pickupTime.getTime() / 1000),
+                    destination: {
+                        coordinates: {
+                            latitude: deliveryPoint.center[1],
+                            longitude: deliveryPoint.center[0]
+                        },
+                        address: deliveryPoint.place_name
+                    }
                 },
                 {
                     headers: {

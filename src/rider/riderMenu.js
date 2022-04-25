@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import styled from "styled-components";
 import {auth, logout} from "../firebase";
 import {useRecoilState, useRecoilValue} from "recoil";
@@ -8,7 +8,14 @@ import {useNavigate} from "react-router-dom";
 import Map, {Marker} from 'react-map-gl';
 import axios from "axios";
 import {useAuthState} from "react-firebase-hooks/auth";
-import {useGeolocation} from "react-use";
+import {useGeolocation, useUnmount} from "react-use";
+import ParcelListItem from "../customer/parcelListItem";
+import CreateParcel from "../customer/createParcel";
+import Parcel from "../customer/parcel";
+import CreateDelivery from "../customer/createDelivery";
+import {CubeGrid} from "styled-loaders-react";
+import Delivery from "./delivery";
+import DeliveryListItem from "./deliveryListItem";
 
 const Content = styled.div`
   width: 100vw;
@@ -93,6 +100,7 @@ const MenuText = styled.p`
 
 const Rider = styled.div`
   width: 25vw;
+  min-width: 25vw;
   background: white;
   display: flex;
   flex-direction: column;
@@ -103,45 +111,143 @@ const OverviewMap = styled(Map)`
   height: 100vh;
 `
 
+const Loader = styled.div`
+  margin: auto;
+`
+
+const Box = styled.div`
+  background: #e8e8e8;
+  margin: 20px;
+  width: calc(100% - 40px);
+  height: 80%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`
+
 const RiderMenu = ({className, children}) => {
+    const [, forceRender] = useState({});
     const user = useRecoilValue(userState);
+    const [menu, setMenu] = useState(0)
     const [rider, setRider] = useRecoilState(riderState);
     const [authUser] = useAuthState(auth);
     const [availableDeliveries, setAvailableDeliveries] = useState([])
+    const [selectedDelivery, setSelectedDelivery] = useState(null)
     const navigate = useNavigate()
-    const location = useGeolocation();
+    const mapRef = useRef();
+
+    const [markers, setMarkers] = useState([])
+
+    useUnmount(() => becomeInactive());
 
     useEffect(() => {
+        if(rider.Status === 2) {
+            if(menu < 2){
+                setMenu(2)
+            }
 
-        authUser.getIdToken(false).then(token => {
-            axios.get(`http://localhost/api/deliveries/radius/${rider.Location.Latitude},${rider.Location.Longitude}?radius=3000`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            }).then(response => {
-                    console.log(response.data)
-                    setAvailableDeliveries(response.data)
-                }
-            ).catch(error => {
-                console.log(error)
+            authUser.getIdToken(false).then(token => {
+                axios.get(`http://localhost/api/deliveries/radius/${rider.Location.Latitude},${rider.Location.Longitude}?radius=3000`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }).then(response => {
+                        console.log(response.data)
+                        setAvailableDeliveries(response.data)
+                    }
+                ).catch(error => {
+                    console.log(error)
+                })
             })
-        })
+        }
+        else{
+            becomeInactive()
+        }
     }, [rider]);
+
+    useEffect(() => {
+        setDeliveryMarkers()
+    }, [availableDeliveries]);
+
+    const setDeliveryMarkers = () => {
+        const deliveryMarkers = [];
+        availableDeliveries.map(x => deliveryMarkers.push({latitude: x.pickup.coordinates.latitude, longitude: x.pickup.coordinates.longitude, image: "box_marker.svg", name: x.id}))
+        setMarkers(deliveryMarkers)
+    }
 
     const becomeActive = () => {
         if(!navigator.geolocation) {
             console.log('Geolocation is not supported by your browser');
         } else {
-            console.log('Locating…');
+            setMenu(1)
             navigator.geolocation.getCurrentPosition(success, error, {maximumAge: 10000});
         }
     }
 
-    const success = (position) => {
-        const latitude  = position.coords.latitude;
-        const longitude = position.coords.longitude;
+    const becomeInactive = () => {
+        setAvailableDeliveries([])
+        setMenu(0)
+        clearMarkers()
 
-        console.log(latitude)
+        if(rider.Status != 1) {
+            authUser.getIdToken(false).then(token => {
+                axios.put(`http://localhost/api/riders/${rider.UserID}`, {Status: 1}, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }).then(response => {
+
+                        setRider(response.data)
+                    }
+                ).catch(error => {
+                    console.log(error)
+                })
+            })
+        }
+    }
+
+    const clearMarkers = () => {
+        setMarkers([])
+        forceRender({})
+    }
+
+    const setMarker = (lat,lng,img,name) => {
+        const exists = markers.find(x => x.name === name);
+
+        if(exists){
+            const m = markers;
+            m[markers.indexOf(exists)] = {latitude: lat, longitude: lng, image: img, name: name}
+            setMarkers(m)
+            forceRender({})
+        }
+        else{
+                setMarkers([...markers, {latitude: lat, longitude: lng, image: img, name: name}])
+        }
+    }
+
+    const success = (position) => {
+
+        const latitude =  51.43842498105066;
+        const longitude = 5.47487112068152
+        // const latitude  = position.coords.latitude;
+        // const longitude = position.coords.longitude;
+
+        updateRiderPosition(latitude, longitude)
+
+        mapRef.current?.flyTo({center: [longitude, latitude], duration: 5000, zoom: 14});
+
+        authUser.getIdToken(false).then(token => {
+            axios.put(`http://localhost/api/riders/${rider.UserID}`, {Status: 2}, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            }).then(response => {
+                    setRider(response.data)
+                }
+            ).catch(error => {
+                console.log(error)
+            })
+        })
     }
 
     const error = () => {
@@ -155,13 +261,56 @@ const RiderMenu = ({className, children}) => {
                     'Authorization': `Bearer ${token}`
                 }
             }).then(response => {
-                    console.log(response.data)
                     setRider(response.data)
                 }
             ).catch(error => {
                 console.log(error)
             })
         })
+    }
+
+    const RenderMenu = (menu) => {
+        switch (menu) {
+            default:
+                return (
+                    <>
+                        <InactiveBox>
+                            <MenuText>You are currently inactive. Press the button below to become active again and see possible
+                                deliveries.</MenuText>
+                            <MenuButton onClick={becomeActive}>Start</MenuButton>
+                        </InactiveBox>
+                    </>
+                )
+            case 1:
+                return (
+                    <Loader><CubeGrid color="#53B94A" size="100px" duration="1s"/></Loader>
+                )
+            case 2:
+                return (
+                    <>
+                    <SubTitle>Available deliveries</SubTitle>
+                <SeparatorLine/>
+                <Box>
+                    {availableDeliveries.map(x => <DeliveryListItem onClick={() => {
+                        setSelectedDelivery(x)
+                        setMarkers([
+                            {latitude: x.pickup.coordinates.latitude, longitude: x.pickup.coordinates.longitude, image: "pickup_marker.svg", name: "pickup"},
+                            {latitude: x.destination.coordinates.latitude, longitude: x.destination.coordinates.longitude, image: "delivery_marker.svg", name: "destination"}
+                        ])
+                        setMenu(3)
+                    }} delivery={x}/>)}
+                </Box>
+                    </>
+                )
+            case 3:
+                return <Delivery
+                    onBack={() => {
+                        setMenu(2)
+                        setDeliveryMarkers()
+                    }}
+                    delivery={selectedDelivery}
+                />
+        }
     }
 
     return (
@@ -177,13 +326,10 @@ const RiderMenu = ({className, children}) => {
                     </IconButton>
                 </Horizontal>
                 <SeparatorLine/>
-                <InactiveBox>
-                    <MenuText>You are currently inactive. Press the button below to become active again and see possible
-                        deliveries.</MenuText>
-                    <MenuButton onClick={becomeActive}>Start</MenuButton>
-                </InactiveBox>
+                {RenderMenu(menu)}
             </Rider>
             <OverviewMap
+                ref={mapRef}
                 initialViewState={{
                     longitude: rider.Location.Longitude,
                     latitude: rider.Location.Latitude,
@@ -194,13 +340,13 @@ const RiderMenu = ({className, children}) => {
             >
                 <Marker draggable onDragEnd={(e) => updateRiderPosition(e.lngLat.lat, e.lngLat.lng)} longitude={rider.Location.Longitude} latitude={rider.Location.Latitude}>
                     <svg width="40" height="40">
-                        <image href="rider_marker.svg" src="rider_marker.png" width="40" height="40"/>
+                        <image href={rider.Status === 2 ? "rider_marker.svg" : "rider_inactive_marker.svg"} width="40" height="40"/>
                     </svg>
                 </Marker>
-                {availableDeliveries.map(x =>
-                    <Marker longitude={x.PickupPoint.Longitude} latitude={x.PickupPoint.Latitude}>
+                {markers && markers.map(x =>
+                    <Marker longitude={x.longitude} latitude={x.latitude}>
                         <svg width="40" height="40">
-                            <image href="box_marker.svg" src="rider_marker.png" width="40" height="40"/>
+                            <image href={x.image} width="40" height="40"/>
                         </svg>
                     </Marker>)}
             </OverviewMap>

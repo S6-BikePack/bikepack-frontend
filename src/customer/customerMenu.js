@@ -244,7 +244,7 @@ const CustomerMenu = ({ className, children }) => {
                 {markers.map(x =>
                     <Marker longitude={x.longitude} latitude={x.latitude}>
                         <svg width="40" height="40">
-                            <image href={x.image} src="rider_marker.png" width="40" height="40"/>
+                            <image href={x.image} width="40" height="40"/>
                         </svg>
                     </Marker>)}
             </OverviewMap>
