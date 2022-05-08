@@ -226,6 +226,9 @@ const CreateDelivery = (props) => {
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`
+                    },
+                    params: {
+                        service_area: "ehv"
                     }
                 })
                 .then(response => {

@@ -5,6 +5,7 @@ import axios from "axios";
 import {useAuthState} from "react-firebase-hooks/auth";
 import {auth} from "../firebase";
 import {CubeGrid} from "styled-loaders-react";
+import * as turf from "@turf/turf";
 
 const SubTitle = styled.h2`
   margin: 20px 0 5px 30px;
@@ -35,7 +36,7 @@ const ParcelInfo = styled.p`
 const SeparatorLine = styled.div`
   margin-left: 25px;
   margin-right: 25px;
-  margin-top: 0;
+  margin-top: 10px;
   height: 2px;
   background: #878787;
 `
@@ -65,9 +66,13 @@ const Delivery = (props) => {
             axios.get(`http://localhost/api/deliveries/${props.delivery.id}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
+                },
+                params: {
+                    service_area: "ehv"
                 }
             }).then(response => {
                     setDelivery(response.data)
+                    PlaceMarkers(response.data)
                 }
             ).catch(error => {
                 console.log(error)
@@ -77,13 +82,41 @@ const Delivery = (props) => {
 
     }, []);
 
+    const PlaceMarkers = (x) => {
+        props.setMarkers([
+            {
+                latitude: x.pickup.coordinates.latitude,
+                longitude: x.pickup.coordinates.longitude,
+                image: "pickup_marker.svg",
+                name: "pickup",
+                radius: turf.circle([x.pickup.coordinates.longitude, x.pickup.coordinates.latitude], 200, {
+                    steps: 50,
+                    units: "meters"
+                })
+            },
+            {
+                latitude: x.destination.coordinates.latitude,
+                longitude: x.destination.coordinates.longitude,
+                image: "delivery_marker.svg",
+                name: "destination",
+                radius: turf.circle([x.destination.coordinates.longitude, x.destination.coordinates.latitude], 200, {
+                    steps: 50,
+                    units: "meters"
+                })
+            }
+        ])
+    }
+
     return (
         delivery !== null ?
             <Box>
                 <div>
                     <SubTitle>{delivery.id}</SubTitle>
+                    <SeparatorLine/>
                     <ParcelInfo>From: {delivery.pickup.address}</ParcelInfo>
                     <ParcelInfo>To: {delivery.destination.address}</ParcelInfo>
+                    <ParcelInfo>At: {new Date(delivery.pickup.time).toLocaleString("nl-NL")}</ParcelInfo>
+                    <SeparatorLine/>
                     <ParcelInfo>Size: {delivery.parcel.size.width}cm, {delivery.parcel.size.height}cm, {delivery.parcel.size.depth}cm</ParcelInfo>
                     <ParcelInfo bottom>Weight: {delivery.parcel.weight}g</ParcelInfo>
                 </div>

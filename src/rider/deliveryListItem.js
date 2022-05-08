@@ -55,6 +55,10 @@ const DeliveryListItem = (props) => {
                     <ParcelInfoLabel>Weight:</ParcelInfoLabel>
                     <ParcelInfoValue>{props.delivery.parcel.weight}g</ParcelInfoValue>
                 </ParcelInfo>
+                <ParcelInfo>
+                    <ParcelInfoLabel>Distance:</ParcelInfoLabel>
+                    <ParcelInfoValue>{props.distance.toFixed()}m</ParcelInfoValue>
+                </ParcelInfo>
             </Horizontal>
         </Box>
     );

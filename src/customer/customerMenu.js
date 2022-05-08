@@ -145,8 +145,10 @@ const CustomerMenu = ({ className, children }) => {
     const [markers, setMarkers] = useState([])
 
     useEffect(() => {
+      if(menu == 0){
         FetchParcels()
-    }, []);
+      }
+    }, [menu]);
 
     const FetchParcels = () => {
         authUser.getIdToken(false).then(token => {
@@ -154,6 +156,9 @@ const CustomerMenu = ({ className, children }) => {
             axios.get(`http://localhost/api/customers/${user.ID}/parcels`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
+                },
+                params: {
+                    service_area: "ehv"
                 }
             }).then(response => {
                     console.log(response.data)
@@ -184,7 +189,6 @@ const CustomerMenu = ({ className, children }) => {
                     </>
                 )
             case 1:
-                FetchParcels()
                 return (
                     <CreateParcel onBack={() => setMenu(0)}/>
                 )
